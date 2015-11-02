@@ -1,0 +1,6 @@
+#ignore debug path
+/build-testBAS-Desktop_Qt_5_4_2_MinGW_32bit-Debug
+/build-testBAS-Desktop_Qt_5_4_2_MinGW_32bit-Release
+#ignore /testBAS/*.user, *.autosave
+/testBAS/*.user
+/testBAS/*.autosave
