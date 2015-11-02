@@ -3,6 +3,7 @@
 
 #include <QFrame>
 #include <QPaintEvent>
+#include <dialog.h>
 
 class Cell : public QFrame
 {
@@ -17,6 +18,11 @@ public:
     QList<Cell*> children;
 
     int dx, dy;
+
+public slots:
+    void add(bool);
+    void del(bool);
+    void split(bool);
 
 protected:
     void mousePressEvent(QMouseEvent *);
