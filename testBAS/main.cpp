@@ -4,7 +4,10 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    Cell w;
+
+    QWidget w;
+    Cell *c = new Cell(w);
+    c->show();
     w.show();
 
     return a.exec();

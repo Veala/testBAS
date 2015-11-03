@@ -17,12 +17,16 @@ public:
     Cell* parentCell;
     QList<Cell*> children;
 
-    int dx, dy;
+    int dX, dY;
+
+signals:
+    void signalMoveChildren(int,int);
 
 public slots:
     void add(bool);
     void del(bool);
     void split(bool);
+    void slotMoveChildren(int,int);
 
 protected:
     void mousePressEvent(QMouseEvent *);

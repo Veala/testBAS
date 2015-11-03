@@ -1,6 +1,7 @@
 #include "frame.h"
 #include <QDebug>
 #include <QMenu>
+#include <QPainter>
 
 Cell::Cell(QWidget *parent) : QFrame(parent)
 {
@@ -22,8 +23,10 @@ void Cell::add(bool)
     if (d.exec()) {
         Cell* cell = new Cell(0);
         cell->parentCell = this;
-
+        children.push_back(cell);
         cell->move(pos().x(), pos().y() + 3*height()/2);
+        connect(this,SIGNAL(signalMoveChildren(int,int)),cell,SLOT(slotMoveChildren(int,int)));
+
         cell->show();
     }
 }
@@ -38,11 +41,17 @@ void Cell::split(bool)
 
 }
 
+void Cell::slotMoveChildren(int dx, int dy)
+{
+    emit signalMoveChildren(dx, dy);
+    this->move(this->x()+dx, this->y()+dy);
+}
+
 void Cell::mousePressEvent(QMouseEvent *event)
 {
     if (event->buttons() == Qt::LeftButton) {
-        dx = event->globalPos().x() - this->x();
-        dy = event->globalPos().y() - this->y();
+        dX = event->globalPos().x() - this->x();
+        dY = event->globalPos().y() - this->y();
     } else if (event->buttons() == Qt::RightButton) {
         QMenu popupMenu;
         QAction *add = popupMenu.addAction(tr("Добавить узел"));
@@ -57,6 +66,8 @@ void Cell::mousePressEvent(QMouseEvent *event)
 
 void Cell::mouseMoveEvent(QMouseEvent *event)
 {
-    if ((event->buttons() == Qt::LeftButton) & (this->parentCell==NULL))
-        this->move(event->globalPos().x()-dx, event->globalPos().y()-dy);
+    if (event->buttons() == Qt::LeftButton) {
+        emit signalMoveChildren(event->globalPos().x()-dX-this->x(), event->globalPos().y()-dY-this->y());
+        this->move(event->globalPos().x()-dX, event->globalPos().y()-dY);
+    }
 }
