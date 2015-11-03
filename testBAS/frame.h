@@ -18,9 +18,13 @@ public:
     QList<Cell*> children;
 
     int dX, dY;
+    QLine lineToParent;
 
 signals:
     void signalMoveChildren(int,int);
+    void newLine(QLine&);
+    void drawLine();
+    void addChild(bool);
 
 public slots:
     void add(bool);
