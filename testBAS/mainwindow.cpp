@@ -1,6 +1,5 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "frame.h"
 
 #include <QMenu>
 #include <QPainter>
@@ -30,13 +29,16 @@ void MainWindow::mousePressEvent(QMouseEvent *event)
 
 void MainWindow::paintEvent(QPaintEvent *event)
 {
-    for (int i=0; i<lines.size(); i++) {
-        QPainter p;
-        p.begin(this);
-        p.setPen(Qt::black);
-        p.drawLine(*lines[i]);
-        p.end();
+    for (int i=0; i<cells.size(); i++) {
+        drawRecursion(cells.at(i));
     }
+//    for (int i=0; i<lines.size(); i++) {
+//        QPainter p;
+//        p.begin(this);
+//        p.setPen(Qt::black);
+//        p.drawLine(*lines[i]);
+//        p.end();
+//    }
 }
 
 void MainWindow::addRoot(bool)
@@ -45,8 +47,9 @@ void MainWindow::addRoot(bool)
     if (d.exec()) {
         Cell *cell = new Cell(this);
         connect(cell,SIGNAL(addChild(bool)),this,SLOT(addChild(bool)));
-        connect(cell,SIGNAL(newLine(QLine&)),this,SLOT(newLine(QLine&)));
-
+        connect(cell,SIGNAL(signalDelCell()),this,SLOT(delTree()));
+        connect(cell,SIGNAL(addTree(bool)),this,SLOT(addTree(bool)));
+        cells.push_back(cell);
         cell->show();
     }
 }
@@ -60,28 +63,60 @@ void MainWindow::addChild(bool)
     if (d.exec()) {
         Cell* cell = new Cell(this);
         cell->parentCell = sender;
-        sender->children.push_back(cell);
+        sender->children.insert(d.ui->comboBox->currentIndex(), cell);
         cell->move(sender->pos().x(), sender->pos().y() + 3*sender->height()/2);
 
+        int n = sender->children.size();
         cell->lineToParent.setP1(QPoint(cell->x()+cell->width()/2, cell->y()));
-        cell->lineToParent.setP2(QPoint(sender->x()+sender->width()/2, sender->y()+sender->height()));
+        for (int i=0; i<n; i++)
+            sender->children.at(i)->lineToParent.setP2(QPoint(sender->x()+sender->width()*(i+1)/(n+1), sender->y()+sender->height()));
         connect(sender,SIGNAL(signalMoveChildren(int,int)),cell,SLOT(slotMoveChildren(int,int)));
-        connect(cell,SIGNAL(newLine(QLine&)),this,SLOT(newLine(QLine&)));
-        connect(cell,SIGNAL(drawLine()),this,SLOT(drawLine()));
+        connect(sender,SIGNAL(signalDelCell()),cell,SLOT(slotDelCell()));
+        connect(sender,SIGNAL(signalDelCell()),this,SLOT(delTree()));
+        connect(cell,SIGNAL(drawLine()),this,SLOT(update()));
         connect(cell,SIGNAL(addChild(bool)),this,SLOT(addChild(bool)));
-        emit cell->newLine(cell->lineToParent);
+        connect(cell,SIGNAL(signalDelCell()),this,SLOT(delTree()));
+        connect(cell,SIGNAL(newTree()),this,SLOT(newTree()));
+        connect(cell,SIGNAL(addTree(bool)),this,SLOT(addTree(bool)));
+        emit cell->drawLine();
 
         cell->show();
     }
 }
 
-void MainWindow::newLine(QLine &line)
+void MainWindow::addTree(bool)
 {
-    lines.push_back(&line);
+
+}
+
+void MainWindow::newTree()
+{
+    Cell *cell = (Cell *)this->sender();
+    cells.push_back(cell);
+}
+
+void MainWindow::delTree()
+{
+    Cell *cell = (Cell *)this->sender();
+    if (cell->parentCell == NULL) {
+        int index = cells.indexOf(cell);
+        if (index != -1) cells.removeAt(index);
+    }
     update();
 }
 
-void MainWindow::drawLine()
+void MainWindow::drawRecursion(Cell* cell)
 {
-    update();
+    if (cell->parentCell != NULL) {
+        QPainter p;
+        p.begin(this);
+        p.setPen(Qt::black);
+        p.drawLine(cell->lineToParent);
+        p.end();
+    }
+    if (cell->children.size() != 0) {
+        foreach (Cell* nextCell, cell->children) {
+            drawRecursion(nextCell);
+        }
+    }
 }

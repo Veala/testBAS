@@ -21,15 +21,19 @@ public:
     QLine lineToParent;
 
 signals:
+    void newTree();
     void signalMoveChildren(int,int);
-    void newLine(QLine&);
+    void delTree();
+    void signalDelCell();
     void drawLine();
     void addChild(bool);
+    void addTree(bool);
 
 public slots:
-    void add(bool);
-    void del(bool);
+    void slotAddTree(bool);
     void split(bool);
+    void del(bool);
+    void slotDelCell();
     void slotMoveChildren(int,int);
 
 protected:

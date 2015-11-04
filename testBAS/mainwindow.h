@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "frame.h"
 
 namespace Ui {
 class MainWindow;
@@ -15,7 +16,7 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
-    QVector<QLine*> lines;
+    QVector<Cell*> cells;
 private:
     Ui::MainWindow *ui;
 
@@ -26,8 +27,10 @@ protected:
 public slots:
     void addRoot(bool);
     void addChild(bool);
-    void newLine(QLine&);
-    void drawLine();
+    void addTree(bool);
+    void newTree();
+    void delTree();
+    void drawRecursion(Cell*);
 
 };
 
