@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QMessageBox>
 #include "frame.h"
 
 namespace Ui {
@@ -31,6 +32,8 @@ public slots:
     void newTree();
     void delTree();
     void drawRecursion(Cell*);
+    Cell* searchNULL(Cell*);
+    void rename(bool);
 
 };
 

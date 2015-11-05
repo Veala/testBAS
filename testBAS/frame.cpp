@@ -5,12 +5,22 @@
 
 Cell::Cell(QWidget *parent) : QFrame(parent)
 {
+    setAutoFillBackground(true);      //to visible pallete
     setWindowFlags(Qt::Widget | Qt::FramelessWindowHint);//(Qt::Window | Qt::FramelessWindowHint);
     setFrameStyle(QFrame::Box | QFrame::Plain);
     resize(100,50);
+    QHBoxLayout *curLayout = new QHBoxLayout();
+    setLayout(curLayout);
+    curLayout->setMargin(10);
+    curLayout->setSpacing(5);
+    curLayout->addWidget(&left_l);  curLayout->addWidget(&name);    curLayout->addWidget(&right_l);
+    left_l.setAlignment(Qt::AlignLeft | Qt::AlignVCenter); right_l.setAlignment(Qt::AlignRight | Qt::AlignVCenter);   name.setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+    //QFont *f = new QFont ("Helvetica", 12, 2, true);
+    QFont f("Helvetica", 12, 2, true);
+    left_l.setFont(f); right_l.setFont(f);    name.setFont(f);
+
     QPalette palette;
     QBrush br(Qt::yellow);
-    //palette.setColor(this->backgroundRole(),QColor(Qt::yellow));
     palette.setBrush(QPalette::Window, br);
     this->setPalette(palette);
 
@@ -85,11 +95,13 @@ void Cell::mousePressEvent(QMouseEvent *event)
         QAction *addCell = popupMenu.addAction(tr("Добавить узел"));
         QAction *addTree = popupMenu.addAction(tr("Добавить дерево"));
         QAction *split = popupMenu.addAction(tr("Отсоединить"));
+        QAction *rename = popupMenu.addAction(tr("Переименовать"));
         QAction *del = popupMenu.addAction(tr("Удалить"));
         //connect(add,SIGNAL(triggered(bool)),this,SLOT(add(bool)));
         connect(addCell,SIGNAL(triggered(bool)),this,SIGNAL(addChild(bool)));
         connect(addTree,SIGNAL(triggered(bool)),this,SIGNAL(addTree(bool)));
         connect(split,SIGNAL(triggered(bool)),this,SLOT(split(bool)));
+        connect(rename,SIGNAL(triggered(bool)),this,SIGNAL(rename(bool)));
         connect(del,SIGNAL(triggered(bool)),this,SLOT(del(bool)));
         popupMenu.exec(event->globalPos());
     }

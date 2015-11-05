@@ -2,6 +2,7 @@
 #define FRAME_H
 
 #include <QFrame>
+#include <QHBoxLayout>
 #include <QPaintEvent>
 #include <dialog.h>
 
@@ -12,8 +13,11 @@ class Cell : public QFrame
 public:
     Cell(QWidget *parent=0);
 
-    int left;
-    int right;
+    int left_i;
+    int right_i;
+    QLabel left_l;
+    QLabel right_l;
+    QLabel name;
     Cell* parentCell;
     QList<Cell*> children;
 
@@ -28,6 +32,7 @@ signals:
     void drawLine();
     void addChild(bool);
     void addTree(bool);
+    void rename(bool);
 
 public slots:
     void slotAddTree(bool);
