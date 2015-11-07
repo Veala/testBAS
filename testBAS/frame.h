@@ -16,8 +16,6 @@ class Cell : public QFrame
 public:
     Cell(QWidget *parent=0);
 
-    int left_i;
-    int right_i;
     QLabel left_l;
     QLabel right_l;
     QLabel name;
@@ -26,6 +24,7 @@ public:
 
     int dX, dY;
     QLine lineToParent;
+
     void toMe(int&);
     void fromChild(int&, Cell*);
 
