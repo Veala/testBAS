@@ -1,7 +1,4 @@
 #include "frame.h"
-#include <QDebug>
-#include <QMenu>
-#include <QPainter>
 
 Cell::Cell(QWidget *parent) : QFrame(parent)
 {
@@ -27,9 +24,36 @@ Cell::Cell(QWidget *parent) : QFrame(parent)
     parentCell = NULL;
 }
 
-void Cell::slotAddTree(bool)
+void Cell::toMe(int &i)
 {
+    i++;
+    if (i == left_l.text().toInt()) return;
+    left_l.setText(QString::number(i));
+    qDebug() << i;
+    if (children.size() == 0) {
+        i++;
+        right_l.setText(QString::number(i));
+        qDebug() << i;
+        if (parentCell == NULL) return;
+        parentCell->fromChild(i,this);
+    } else {
+        children.at(0)->toMe(i);
+    }
+}
 
+void Cell::fromChild(int &i, Cell *childCell)
+{
+    int index = children.indexOf(childCell);
+    if (index+1 == children.size()) {
+        i++;
+        if (i == right_l.text().toInt()) return;
+        right_l.setText(QString::number(i));
+        qDebug() << i;
+        if (parentCell == NULL) return;
+        parentCell->fromChild(i,this);
+    } else {
+        children.at(index+1)->toMe(i);
+    }
 }
 
 void Cell::split(bool)
@@ -52,13 +76,32 @@ void Cell::split(bool)
 
     disconnect(parentCell,SIGNAL(signalMoveChildren(int,int)),this,SLOT(slotMoveChildren(int,int)));
     disconnect(parentCell,SIGNAL(signalDelCell()),this,SLOT(slotDelCell()));
+    Cell *prevParent = this->parentCell;
     this->parentCell = NULL;
     emit newTree();
     emit drawLine();
 
+    //---------------------------------------------------------Рассчет
+    int i = 0;
+    toMe(i);
+
+    if (index == 0) {
+        i = prevParent->left_l.text().toInt();
+        if (n==0) prevParent->fromChild(i,NULL);
+        else prevParent->children.at(0)->toMe(i);
+    } else if (index+1 > n) {
+        Cell *cell = prevParent->children.at(index-1);
+        i = cell->right_l.text().toInt();
+        prevParent->fromChild(i,cell);
+    } else {
+        i = prevParent->children.at(index-1)->right_l.text().toInt();
+        prevParent->children.at(index)->toMe(i);
+    }
+    //---------------------------------------------------------Рассчет
+
 }
 
-void Cell::del(bool b)
+void Cell::del(bool)
 {
     if (parentCell != NULL) {
         int index = parentCell->children.indexOf(this);
@@ -66,6 +109,23 @@ void Cell::del(bool b)
         int n = parentCell->children.size();
         for (int i=0; i<n; i++)
             parentCell->children.at(i)->lineToParent.setP2(QPoint(parentCell->x()+parentCell->width()*(i+1)/(n+1), parentCell->y()+parentCell->height()));
+
+        //---------------------------------------------------------Рассчет
+        Cell *prevParent = this->parentCell;
+        int i;
+        if (index == 0) {
+            i = prevParent->left_l.text().toInt();
+            if (n==0) prevParent->fromChild(i,NULL);
+            else prevParent->children.at(0)->toMe(i);
+        } else if (index+1 > n) {
+            Cell *cell = prevParent->children.at(index-1);
+            i = cell->right_l.text().toInt();
+            prevParent->fromChild(i,cell);
+        } else {
+            i = prevParent->children.at(index-1)->right_l.text().toInt();
+            prevParent->children.at(index)->toMe(i);
+        }
+        //---------------------------------------------------------Рассчет
     }
     slotDelCell();
 }
@@ -93,11 +153,10 @@ void Cell::mousePressEvent(QMouseEvent *event)
     } else if (event->buttons() == Qt::RightButton) {
         QMenu popupMenu;
         QAction *addCell = popupMenu.addAction(tr("Добавить узел"));
-        QAction *addTree = popupMenu.addAction(tr("Добавить дерево"));
-        QAction *split = popupMenu.addAction(tr("Отсоединить"));
+        QAction *addTree = popupMenu.addAction(tr("Присоединить дерево"));
+        QAction *split = popupMenu.addAction(tr("Отсоединить поддерево"));
         QAction *rename = popupMenu.addAction(tr("Переименовать"));
         QAction *del = popupMenu.addAction(tr("Удалить"));
-        //connect(add,SIGNAL(triggered(bool)),this,SLOT(add(bool)));
         connect(addCell,SIGNAL(triggered(bool)),this,SIGNAL(addChild(bool)));
         connect(addTree,SIGNAL(triggered(bool)),this,SIGNAL(addTree(bool)));
         connect(split,SIGNAL(triggered(bool)),this,SLOT(split(bool)));

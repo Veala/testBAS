@@ -4,6 +4,9 @@
 #include <QFrame>
 #include <QHBoxLayout>
 #include <QPaintEvent>
+#include <QDebug>
+#include <QMenu>
+#include <QPainter>
 #include <dialog.h>
 
 class Cell : public QFrame
@@ -23,6 +26,8 @@ public:
 
     int dX, dY;
     QLine lineToParent;
+    void toMe(int&);
+    void fromChild(int&, Cell*);
 
 signals:
     void newTree();
@@ -35,7 +40,6 @@ signals:
     void rename(bool);
 
 public slots:
-    void slotAddTree(bool);
     void split(bool);
     void del(bool);
     void slotDelCell();

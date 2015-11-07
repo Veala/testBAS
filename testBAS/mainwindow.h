@@ -3,6 +3,10 @@
 
 #include <QMainWindow>
 #include <QMessageBox>
+#include <QString>
+#include <QMenu>
+#include <QPainter>
+#include <QDebug>
 #include "frame.h"
 
 namespace Ui {
@@ -18,6 +22,10 @@ public:
     ~MainWindow();
 
     QVector<Cell*> cells;
+
+    void drawRecursion(Cell*);
+    //void leftrightRecursion(Cell*, Cell*, int&, QString);
+    Cell* searchNULL(Cell*);
 private:
     Ui::MainWindow *ui;
 
@@ -31,8 +39,6 @@ public slots:
     void addTree(bool);
     void newTree();
     void delTree();
-    void drawRecursion(Cell*);
-    Cell* searchNULL(Cell*);
     void rename(bool);
 
 };
