@@ -44,6 +44,8 @@ void MainWindow::addRoot(bool)
         connect(cell,SIGNAL(drawLine()),this,SLOT(update()));
         connect(cell,SIGNAL(newTree()),this,SLOT(newTree()));
         connect(cell,SIGNAL(rename(bool)),this,SLOT(rename(bool)));
+        connect(cell,SIGNAL(changePosition(bool)),this,SLOT(changePosition(bool)));
+        connect(cell,SIGNAL(moveToPosition()),this,SLOT(moveToPosition()));
         cells.push_back(cell);
         cell->show();
 
@@ -88,6 +90,8 @@ void MainWindow::addChild(bool)
         connect(cell,SIGNAL(newTree()),this,SLOT(newTree()));
         connect(cell,SIGNAL(addTree(bool)),this,SLOT(addTree(bool)));
         connect(cell,SIGNAL(rename(bool)),this,SLOT(rename(bool)));
+        connect(cell,SIGNAL(changePosition(bool)),this,SLOT(changePosition(bool)));
+        connect(cell,SIGNAL(moveToPosition()),this,SLOT(moveToPosition()));
         emit cell->drawLine();
 
         cell->show();
@@ -117,7 +121,7 @@ void MainWindow::addTree(bool)
     d.ui->comboBox_tree->setEnabled(true);
     d.ui->comboBox->setEnabled(true);
     Cell *sender = (Cell*)this->sender();
-    Cell *curParent = searchNULL(sender);
+    Cell *curParent = searchNULL(sender, NULL);
     for (int i=0; i<=sender->children.size(); i++)
         d.ui->comboBox->addItem(QString::number(i));
     for (int i=0; i<cells.size(); i++)
@@ -222,10 +226,11 @@ void MainWindow::drawRecursion(Cell* cell)
 //    }
 //}
 
-Cell *MainWindow::searchNULL(Cell *cell)
+Cell *MainWindow::searchNULL(Cell *cell, Cell *nearer)
 {
-    if (cell->parentCell == NULL) return cell;
-    else return searchNULL(cell->parentCell);
+    if (cell->parentCell == nearer) return cell;
+    else if (cell->parentCell == NULL) return cell;
+    else return searchNULL(cell->parentCell, nearer);
 }
 
 void MainWindow::rename(bool)
@@ -236,4 +241,94 @@ void MainWindow::rename(bool)
     d.ui->comboBox->setEnabled(false);
     Cell *cell = (Cell *)this->sender();
     if (d.exec()) cell->name.setText(d.ui->lineEdit->text());
+}
+
+void MainWindow::changePosition(bool)
+{
+    setCursor(Qt::PointingHandCursor);
+    movingCell = (Cell*)this->sender();
+}
+
+void MainWindow::moveToPosition()
+{
+    setCursor(Qt::ArrowCursor);
+    Cell *sender = (Cell*)this->sender();
+    Cell *NULL1 = searchNULL(movingCell, NULL);
+    Cell *NULL2 = searchNULL(sender, NULL);
+    if (NULL1!=NULL2) return;
+    if (sender == movingCell) return;
+    Cell *parent_X = searchNULL(sender, movingCell);
+    if (parent_X->parentCell == movingCell) return;
+
+    Dialog d;
+    d.ui->lineEdit->setEnabled(false);
+    d.ui->comboBox->setEnabled(true);
+    d.ui->comboBox_tree->setEnabled(false);
+
+    for (int i=0; i<=sender->children.size(); i++)
+        d.ui->comboBox->addItem(QString::number(i));
+
+    if (d.exec()) {
+        int N1, N2;
+        int index = movingCell->parentCell->children.indexOf(movingCell);
+        if (movingCell->parentCell->children.size() == index+1)
+            N1 = movingCell->parentCell->right_l.text().toInt();
+        else
+            N1 = movingCell->parentCell->children.at(index+1)->left_l.text().toInt();
+        if (sender == movingCell->parentCell) {
+            if (d.ui->comboBox->currentIndex() == index) return;
+            if (d.ui->comboBox->currentIndex() == index+1) return;
+            if (d.ui->comboBox->currentIndex() > index) {
+                sender->children.insert(d.ui->comboBox->currentIndex(), movingCell);
+                movingCell->parentCell->children.removeAt(index);
+            } else {
+                movingCell->parentCell->children.removeAt(index);
+                sender->children.insert(d.ui->comboBox->currentIndex(), movingCell);
+            }
+        } else {
+            movingCell->parentCell->children.removeAt(index);
+            sender->children.insert(d.ui->comboBox->currentIndex(), movingCell);
+        }
+        int n = sender->children.size();
+        for (int i=0; i<n; i++)
+            sender->children.at(i)->lineToParent.setP2(QPoint(sender->x()+sender->width()*(i+1)/(n+1), sender->y()+sender->height()));
+        n = movingCell->parentCell->children.size();
+        for (int i=0; i<n; i++)
+            movingCell->parentCell->children.at(i)->lineToParent.setP2(QPoint(movingCell->parentCell->x()+movingCell->parentCell->width()*(i+1)/(n+1), movingCell->parentCell->y()+movingCell->parentCell->height()));
+        disconnect(movingCell->parentCell,SIGNAL(signalMoveChildren(int,int)),movingCell,SLOT(slotMoveChildren(int,int)));
+        disconnect(movingCell->parentCell,SIGNAL(signalDelCell()),movingCell,SLOT(slotDelCell()));
+        Cell *prevParent = movingCell->parentCell;
+        movingCell->parentCell = sender;
+        connect(sender,SIGNAL(signalMoveChildren(int,int)),movingCell,SLOT(slotMoveChildren(int,int)));
+        connect(sender,SIGNAL(signalDelCell()),movingCell,SLOT(slotDelCell()));
+        emit movingCell->drawLine();
+
+        int index2 = movingCell->parentCell->children.indexOf(movingCell);;
+        if (movingCell->parentCell->children.size() == index2+1)
+            N2 = movingCell->parentCell->right_l.text().toInt();
+        else
+            N2 = movingCell->parentCell->children.at(index2+1)->left_l.text().toInt();
+
+        //---------------------------------------------------------Рассчет
+        int i;
+        if (N2>N1) {
+            if (index == 0) {
+                i = prevParent->left_l.text().toInt();
+                if (n==0) prevParent->fromChild(i,NULL);
+                else prevParent->children.at(0)->toMe(i);
+            } else if (index+1 > n) {
+                Cell *cell = prevParent->children.at(index-1);
+                i = cell->right_l.text().toInt();
+                prevParent->fromChild(i,cell);
+            } else {
+                i = prevParent->children.at(index-1)->right_l.text().toInt();
+                prevParent->children.at(index)->toMe(i);
+            }
+        } else {
+            if (index2 == 0) i = movingCell->parentCell->left_l.text().toInt();
+            else i = movingCell->parentCell->children.at(index2-1)->right_l.text().toInt();
+            movingCell->toMe(i);
+        }
+        //---------------------------------------------------------Рассчет
+    }
 }

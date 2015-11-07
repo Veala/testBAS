@@ -32,6 +32,7 @@ void Cell::toMe(int &i)
     qDebug() << i;
     if (children.size() == 0) {
         i++;
+        if (i == right_l.text().toInt()) return;
         right_l.setText(QString::number(i));
         qDebug() << i;
         if (parentCell == NULL) return;
@@ -147,6 +148,10 @@ void Cell::slotMoveChildren(int dx, int dy)
 
 void Cell::mousePressEvent(QMouseEvent *event)
 {
+    if (cursor().shape()!=Qt::ArrowCursor) {
+        emit moveToPosition();
+        return;
+    }
     if (event->buttons() == Qt::LeftButton) {
         dX = event->globalPos().x() - this->x();
         dY = event->globalPos().y() - this->y();
@@ -155,11 +160,13 @@ void Cell::mousePressEvent(QMouseEvent *event)
         QAction *addCell = popupMenu.addAction(tr("Добавить узел"));
         QAction *addTree = popupMenu.addAction(tr("Присоединить дерево"));
         QAction *split = popupMenu.addAction(tr("Отсоединить поддерево"));
+        QAction *changePosition = popupMenu.addAction(tr("На смену позиции"));
         QAction *rename = popupMenu.addAction(tr("Переименовать"));
         QAction *del = popupMenu.addAction(tr("Удалить"));
         connect(addCell,SIGNAL(triggered(bool)),this,SIGNAL(addChild(bool)));
         connect(addTree,SIGNAL(triggered(bool)),this,SIGNAL(addTree(bool)));
         connect(split,SIGNAL(triggered(bool)),this,SLOT(split(bool)));
+        connect(changePosition,SIGNAL(triggered(bool)),this,SIGNAL(changePosition(bool)));
         connect(rename,SIGNAL(triggered(bool)),this,SIGNAL(rename(bool)));
         connect(del,SIGNAL(triggered(bool)),this,SLOT(del(bool)));
         popupMenu.exec(event->globalPos());

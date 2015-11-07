@@ -25,7 +25,10 @@ public:
 
     void drawRecursion(Cell*);
     //void leftrightRecursion(Cell*, Cell*, int&, QString);
-    Cell* searchNULL(Cell*);
+    Cell *searchNULL(Cell*, Cell*);
+
+    Cell *movingCell;
+
 private:
     Ui::MainWindow *ui;
 
@@ -40,6 +43,8 @@ public slots:
     void newTree();
     void delTree();
     void rename(bool);
+    void changePosition(bool);
+    void moveToPosition();
 
 };
 

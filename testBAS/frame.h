@@ -39,6 +39,9 @@ signals:
     void addTree(bool);
     void rename(bool);
 
+    void changePosition(bool);
+    void moveToPosition();
+
 public slots:
     void split(bool);
     void del(bool);
